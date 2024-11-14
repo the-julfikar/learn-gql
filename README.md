@@ -167,6 +167,63 @@ query ReviewQ($reviewId: ID!) {
 }
 ```
 
+## Mutation
+**schema.js**
+```javascript
+  type Mutation {
+        addGame(game: AddGameInput!): Game
+        deleteGame(id: ID!): [Game]
+        updateGame(id: ID!, edits: EditGameInput!): Game
+    }
+    input AddGameInput {
+        title: String!
+        platform: [String!]!
+    }
+    input EditGameInput {
+        title: String!
+        platform: [String!]
+    }
+```
+
+**index.js**
+```javascript
+    Mutation: {
+        deleteGame(_, args) {
+            db.games = db.games.filter((g) => g.id !== args.id)
+
+            return db.games
+        },
+        addGame(_, args) {
+            let game = {
+                ...args.game,
+                id: Math.floor(Math.random()*10000).toString()
+            }
+            db.games.push(game)
+            return game
+        },
+        updateGame(_, args) {
+            db.games = db.games.map((g) => {
+                if(g.id === args.id) {
+                    return {...g, ...args.edits}
+                }
+                return g
+            })
+
+            return db.games.find((g) => g.id === args.id)
+        }
+    }
+```
+
+**Apollo Server**
+```javascript
+mutation DelGame($deleteGameId: ID!) {
+  deleteGame(id: $deleteGameId) {
+    id,
+    title,
+    platform
+  }
+}
+```
 ## Apollo Server Docs
 
 [Tech-doc](https://www.apollographql.com/docs/apollo-server/getting-started#step-1-create-a-new-project)
